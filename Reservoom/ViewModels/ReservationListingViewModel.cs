@@ -7,34 +7,70 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Reservoom.Commands;
 using Reservoom.Models;
+using Reservoom.Stores;
 
 namespace Reservoom.ViewModels
 {
     internal class ReservationListingViewModel : ViewModelBase
     {
-        private readonly Hotel _hotel;
         private readonly ObservableCollection<ReservationViewModel> _reservations;
-
+        private HotelStore _hotelStore;
 
         public IEnumerable<ReservationViewModel> Reservations => _reservations; // IEnumerable for encapsulation
-
-        public ICommand MakeReservationCommand { get; }
-
-        public ReservationListingViewModel(Hotel hotel, Services.NavigationService makeReservationNavigationService)
+        private bool _isLoading;
+        public bool IsLoading
         {
-            _hotel = hotel;
+            get { return _isLoading; }
+            set
+            {
+                _isLoading = value;
+                OnPropertyChanged(nameof(IsLoading));
+            }
+        }
+        public ICommand MakeReservationCommand { get; }
+        public ICommand LoadReservationsCommand { get; }
+
+        public ReservationListingViewModel(HotelStore hotelStore, Services.NavigationService makeReservationNavigationService)
+        {
+            _hotelStore = hotelStore;
             _reservations = new ObservableCollection<ReservationViewModel>();
-
             MakeReservationCommand = new NavigateCommand(makeReservationNavigationService);
+            LoadReservationsCommand = new LoadReservationsCommand(this, hotelStore);
+            _hotelStore.ReservationMade += OnReservationMade;
 
-            UpdateReservations();
         }
 
-        private void UpdateReservations()
+        ~ReservationListingViewModel()
+        {
+
+        }
+
+        public override void Dispose() // Used to dispose of the ViewModel when changing views to prevent potential memory leaks.
+        {
+            _hotelStore.ReservationMade -= OnReservationMade;
+            base.Dispose();
+        }
+
+        private void OnReservationMade(Reservation reservation)
+        {
+            ReservationViewModel reservationViewModel = new ReservationViewModel(reservation);
+            _reservations.Add(reservationViewModel);
+        }
+
+        public static ReservationListingViewModel LoadViewModel(HotelStore hotelStore, Services.NavigationService makeReservationNavigationService)
+        {
+            ReservationListingViewModel viewModel = new ReservationListingViewModel(hotelStore, makeReservationNavigationService);
+
+            viewModel.LoadReservationsCommand.Execute(null);
+
+            return viewModel;
+        }
+
+        public void UpdateReservations(IEnumerable<Reservation> reservations)
         {
             _reservations.Clear();
 
-            foreach(Reservation reservation in _hotel.GetAllReservations())
+            foreach(Reservation reservation in reservations)
             {
                 ReservationViewModel reservationViewModel = new ReservationViewModel(reservation);
                 _reservations.Add(reservationViewModel);

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,7 +12,7 @@ using Reservoom.Stores;
 
 namespace Reservoom.ViewModels
 {
-    internal class MakeReservationViewModel : ViewModelBase
+    internal class MakeReservationViewModel : ViewModelBase, INotifyDataErrorInfo
     {
         private string _username;
         public string Username
@@ -69,6 +71,9 @@ namespace Reservoom.ViewModels
         }
 
         private DateTime _endDate = new DateTime(2025, 1, 1);
+
+        
+
         public DateTime EndDate
         {
             get
@@ -79,16 +84,41 @@ namespace Reservoom.ViewModels
             {
                 _endDate = value;
                 OnPropertyChanged(nameof(EndDate));
+                _propertyNameToErrorsDictionary.Remove(nameof(EndDate));
+
+                if (EndDate < StartDate)
+                {
+                    List<string> endDateErrors = new List<string>()
+                    {
+                        "The end date cannot be before the start date."
+                    };
+
+                    _propertyNameToErrorsDictionary.Add(nameof(EndDate), endDateErrors);
+                    ErrorsChanged?.Invoke(this, new DataErrorsChangedEventArgs(nameof(EndDate)));
+                }
             }
         }
 
         public ICommand SubmitCommand { get; }
         public ICommand CancelCommand { get; }
 
-        public MakeReservationViewModel(Hotel hotel, Services.NavigationService reservationViewNavigationService)
+        private readonly Dictionary<string, List<string>> _propertyNameToErrorsDictionary;
+
+        public bool HasErrors => _propertyNameToErrorsDictionary.Any();
+
+        public event EventHandler<DataErrorsChangedEventArgs>? ErrorsChanged;
+
+        public MakeReservationViewModel(HotelStore hotelStore, Services.NavigationService reservationViewNavigationService)
         {
-            SubmitCommand = new MakeReservationCommand(this, hotel, reservationViewNavigationService);
+            SubmitCommand = new MakeReservationCommand(this, hotelStore, reservationViewNavigationService);
             CancelCommand = new NavigateCommand(reservationViewNavigationService);
+
+            _propertyNameToErrorsDictionary = new Dictionary<string, List<string>>();
+        }
+
+        public IEnumerable GetErrors(string? propertyName)
+        {
+            return _propertyNameToErrorsDictionary.GetValueOrDefault(propertyName, new List<string>());
         }
     }
 }

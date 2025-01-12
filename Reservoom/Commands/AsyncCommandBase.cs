@@ -19,7 +19,7 @@ namespace Reservoom.Commands
             set
             {
                 _isExecuting = value;
-                OnCanExecuteChanged();
+                OnCanExecutedChanged();
             }
         }
 

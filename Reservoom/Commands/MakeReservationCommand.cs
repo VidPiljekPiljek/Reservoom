@@ -8,6 +8,7 @@ using System.Windows;
 using Reservoom.Exceptions;
 using Reservoom.Models;
 using Reservoom.Services;
+using Reservoom.Stores;
 using Reservoom.ViewModels;
 
 namespace Reservoom.Commands
@@ -15,7 +16,7 @@ namespace Reservoom.Commands
     class MakeReservationCommand : AsyncCommandBase
     {
         private readonly MakeReservationViewModel _makeReservationViewModel;
-        private readonly Hotel _hotel;
+        private readonly HotelStore _hotelStore;
         private readonly NavigationService _reservationViewNavigationService;
 
         public override async Task ExecuteAsync(object parameter)
@@ -31,7 +32,7 @@ namespace Reservoom.Commands
 
             try
             {
-                await _hotel.MakeReservation(reservation);
+                _hotelStore.MakeReservation(reservation);
                 MessageBox.Show("Room reserved successfully", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
                 _reservationViewNavigationService.Navigate();
             }
@@ -50,10 +51,10 @@ namespace Reservoom.Commands
             return !string.IsNullOrEmpty(_makeReservationViewModel.Username) && _makeReservationViewModel.FloorNumber > 0 && base.CanExecute(parameter);
         }
 
-        public MakeReservationCommand(MakeReservationViewModel makeReservationViewModel, Hotel hotel, NavigationService reservationViewNavigationService)
+        public MakeReservationCommand(MakeReservationViewModel makeReservationViewModel, HotelStore hotelStore, NavigationService reservationViewNavigationService)
         {
             _makeReservationViewModel = makeReservationViewModel;
-            _hotel = hotel;
+            _hotelStore = hotelStore;
             _reservationViewNavigationService = reservationViewNavigationService;
             _makeReservationViewModel.PropertyChanged += OnViewModelPropertyChanged;
         }

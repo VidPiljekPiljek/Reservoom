@@ -22,15 +22,15 @@ namespace Reservoom.Models
             EndTime = endTime;
         }
 
-        public bool Conflicts(Reservation reservation)
-        {
-            if (reservation.RoomID.Equals(RoomID))
-            {
-                return true;
-            }
+        ////public bool Conflicts(Reservation reservation)
+        //{
+        //    if (reservation.RoomID.Equals(RoomID))
+        //    {
+        //        return true;
+        //    }
 
-            return reservation.StartTime < EndTime || reservation.EndTime > StartTime;
-        }
+        //    return reservation.StartTime < EndTime || reservation.EndTime > StartTime;
+        //}
 
         //public static bool operator ==(RoomID, roomID1, RoomID room ID2)
         //{

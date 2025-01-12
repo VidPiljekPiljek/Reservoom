@@ -15,5 +15,7 @@ namespace Reservoom.ViewModels
         { // Call this when a property is changed
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
+        public virtual void Dispose() { }
     }
 }
